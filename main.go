@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jailtonjunior94/go-sum/pkg/excel"
 
 	"github.com/shopspring/decimal"
@@ -19,49 +21,63 @@ func main() {
 
 	queries := NewQueries(db)
 
-	invoiceDates, err := queries.GetInvoiceDates()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// invoiceDates, err := queries.GetInvoiceDates()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	ctx := context.Background()
 	provider := excel.NewProvider()
 	xls := provider.NewFile(ctx)
 
-	for _, date := range invoiceDates {
-		invoices, err := queries.GetInvoices(date)
-		if err != nil {
-			log.Fatal(err)
-		}
+	date := time.Date(2024, 11, 1, 0, 0, 0, 0, time.UTC)
+	invoices, err := queries.GetInvoices(date)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		groupedByCategory := GroupBy(invoices.Items, func(i InvoiceItem) string {
-			return i.Category.Name
+	groupedByTag := GroupBy(invoices.Items, func(i InvoiceItem) string {
+		return i.Tags
+	})
+
+	tagSheet := xls.NewSheet(ctx, date.Format("2006-01"))
+	for tag, group := range groupedByTag {
+		sum := Sum(group, func(i InvoiceItem) float64 {
+			return i.InstallmentValue
 		})
 
-		categorySheet := xls.NewSheet(ctx, date.Format("2006-01"))
-		for category, group := range groupedByCategory {
-			sum := Sum(group, func(i InvoiceItem) float64 {
-				return i.InstallmentValue
-			})
+		sumDecimal := decimal.NewFromFloat(sum).Round(2)
+		fmt.Printf("Total gasto da tag %s: R$ %s\n", tag, sumDecimal)
 
-			sumDecimal := decimal.NewFromFloat(sum).Round(2)
-			fmt.Printf("Total gasto da categoria %s: R$ %s\n", category, sumDecimal)
-			row := NewItemsExportRow(category, sumDecimal.String(), "", "")
-			if err := categorySheet.Write(ctx, row); err != nil {
-				log.Fatal(err)
-			}
-
-			for _, item := range group {
-				fmt.Printf("  descrição: %s\n", item.Description)
-				row := NewItemsExportRow("", "", item.Description, decimal.NewFromFloat(item.InstallmentValue).Round(2).String())
-				if err := categorySheet.Write(ctx, row); err != nil {
-					log.Fatal(err)
-				}
-			}
+		row := NewBudgetExportRow(tag, sumDecimal.String())
+		if err := tagSheet.Write(ctx, row); err != nil {
+			log.Fatal(err)
 		}
 	}
 
-	err = xls.SaveAs(ctx, "./files/despesas_cartao.xlsx")
+	// categorySheet := xls.NewSheet(ctx, date.Format("2006-01"))
+	// for category, group := range groupedByCategory {
+	// 	sum := Sum(group, func(i InvoiceItem) float64 {
+	// 		return i.InstallmentValue
+	// 	})
+
+	// 	sumDecimal := decimal.NewFromFloat(sum).Round(2)
+	// 	fmt.Printf("Total gasto da categoria %s: R$ %s\n", category, sumDecimal)
+	// 	row := NewItemsExportRow(category, sumDecimal.String(), "", "")
+	// 	if err := categorySheet.Write(ctx, row); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+
+	// 	for _, item := range group {
+	// 		fmt.Printf("  descrição: %s\n", item.Description)
+	// 		row := NewItemsExportRow("", "", item.Description, decimal.NewFromFloat(item.InstallmentValue).Round(2).String())
+	// 		if err := categorySheet.Write(ctx, row); err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	// 	}
+	// }
+
+	err = xls.SaveAs(ctx, fmt.Sprintf("./files/orcamento-domestico-%s.xlsx", uuid.New().String()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -120,6 +136,18 @@ func NewItemsExportRow(category, price, item, priceItem string) ItemsExportRow {
 		Price:     price,
 		Item:      item,
 		PriceItem: priceItem,
+	}
+}
+
+type BudgetExportRow struct {
+	Budget interface{} `column:"A" header:"Orçamento"`
+	Price  interface{} `column:"B" header:"Preço"`
+}
+
+func NewBudgetExportRow(budget, price string) BudgetExportRow {
+	return BudgetExportRow{
+		Budget: budget,
+		Price:  price,
 	}
 }
 

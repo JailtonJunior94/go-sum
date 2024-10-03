@@ -49,6 +49,7 @@ func (q *queries) GetInvoices(date time.Time) (*Invoice, error) {
 				ii.TotalAmount,
 				ii.Installment,
 				ii.InstallmentValue,
+				ii.Tags,
 				CAST(c2.Id AS CHAR(36)) [CategoryID],
 				c2.Name
 			FROM
@@ -57,6 +58,7 @@ func (q *queries) GetInvoices(date time.Time) (*Invoice, error) {
 				inner join Category c2 on c2.Id = ii.CategoryId
 			WHERE
 				i.Date = @date
+				AND ii.Tags != ''
 			ORDER BY ii.PurchaseDate`
 
 	rows, err := q.db.Query(query, sql.Named("date", date))
@@ -80,6 +82,7 @@ func (q *queries) GetInvoices(date time.Time) (*Invoice, error) {
 			&invoiceItem.TotalAmount,
 			&invoiceItem.Installment,
 			&invoiceItem.InstallmentValue,
+			&invoiceItem.Tags,
 			&invoiceItem.Category.ID,
 			&invoiceItem.Category.Name,
 		)

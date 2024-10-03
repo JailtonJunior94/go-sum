@@ -1,10 +1,11 @@
 module github.com/jailtonjunior94/go-sum
 
-go 1.22
+go 1.23.2
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/shopspring/decimal v1.3.1
+	github.com/google/uuid v1.6.0
+	github.com/shopspring/decimal v1.4.0
 	github.com/xuri/excelize/v2 v2.8.1
 )
 

@@ -17,6 +17,7 @@ type (
 		TotalAmount      float64
 		Installment      int
 		InstallmentValue float64
+		Tags             string
 		Category         Category
 	}
 
