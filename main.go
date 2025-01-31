@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	db, err := NewSQLServerDatabase("sqlserver", "")
+	db, err := NewSQLServerDatabase("sqlserver", "sqlserver://DB_A453C8_FinancialControl_admin:@stefany@1994@SQL5053.site4now.net?database=DB_A453C8_FinancialControl")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 	provider := excel.NewProvider()
 	xls := provider.NewFile(ctx)
 
-	date := time.Date(2025, 2, 1, 0, 0, 0, 0, time.UTC)
+	date := time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)
 	invoices, err := queries.GetInvoices(date)
 	if err != nil {
 		log.Fatal(err)
