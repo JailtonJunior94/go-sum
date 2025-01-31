@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	db, err := NewSQLServerDatabase("sqlserver", "sqlserver://DB_A453C8_FinancialControl_admin:@stefany@1994@SQL5053.site4now.net?database=DB_A453C8_FinancialControl")
+	db, err := NewSQLServerDatabase("sqlserver", "")
 	if err != nil {
 		log.Fatal(err)
 	}
