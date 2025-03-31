@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jailtonjunior94/go-sum/pkg/excel"
 
 	"github.com/shopspring/decimal"
@@ -25,7 +24,7 @@ func main() {
 	provider := excel.NewProvider()
 	xls := provider.NewFile(ctx)
 
-	date := time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC)
+	date := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	invoices, err := queries.GetInvoices(date)
 	if err != nil {
 		log.Fatal(err)
@@ -50,7 +49,7 @@ func main() {
 		}
 	}
 
-	err = xls.SaveAs(ctx, fmt.Sprintf("./files/orcamento-domestico-%s.xlsx", uuid.New().String()))
+	err = xls.SaveAs(ctx, fmt.Sprintf("./files/orcamento-domestico-%s.xlsx", date.Format("2006-01")))
 	if err != nil {
 		log.Fatal(err)
 	}
